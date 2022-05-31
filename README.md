@@ -19,6 +19,7 @@ Sandbox to learn about Rust
   - [Explicit Type Annotation](#explicit-type-annotation)
     - [Integers](#integers)
     - [Decimals](#decimals)
+    - [Strings](#strings)
 
 # Cargo
 Cargo is the package manager, much like JavaScript's NPM or Yarn and Java's Gradle or Maven.
@@ -83,7 +84,7 @@ eprintln!("You cannot do that!");`
 # Variables
 Variables are declared similar to TypeScript and are **immutable** by default.
 
-Typically, Rust follows the [snake_case](https://en.wikipedia.org/wiki/Snake_case) naming convention, much like C++.
+Typically, Rust follows the [snake_case](https://en.wikipedia.org/wiki/Snake_case) naming convention, much like C++. But of course, you can follow whichever naming convention you prefer, but expect Rust libraries to use snake_case.
 
 ## Declaration
 Initializing a variable looks like this:
@@ -132,3 +133,10 @@ Example:
 let my_float: f32 = 0.125;
 let my_double: f64 = 0.0078125;
 ```
+
+### Strings
+Explicitly typing strings is a little different:
+```rs
+let my_string: &str = "Hello, world!";
+```
+The `&` indicates the variable is a reference, much like C++. A string literal is a reference to that literal, so when explicitly typing a string that is initialized with a literal, you'll need that `&`.
