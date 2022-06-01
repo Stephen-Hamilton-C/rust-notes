@@ -26,6 +26,12 @@ Sandbox to learn about Rust
   - [Mutable Arrays](#mutable-arrays)
   - [Array Length](#array-length)
   - [Array Slicing](#array-slicing)
+- [Tuples](#tuples)
+  - [Access Tuple Values](#access-tuple-values)
+  - [Tuple Destructuring](#tuple-destructuring)
+  - [Mutable Tuples](#mutable-tuples)
+- [Constants](#constants)
+  - [Why Constant instead of Immutable Variable?](#why-constant-instead-of-immutable-variable)
 
 # Cargo
 Cargo is the package manager, much like JavaScript's NPM or Yarn and Java's Gradle or Maven.
@@ -185,3 +191,47 @@ let small_slice: &[u8] = &big_array[0..5];
 println!("slice length: {}", small_slice.len()); // Output: slice length: 5
 ```
 Slices do not include the last index.
+
+# Tuples
+Essentially an array with different types in fixed locations.
+```rs
+let name_and_age: (&str, u8) = ("Isaac", 54);
+println!("{:?}", name_and_age); //Output: ("Isaac", 54)
+```
+
+## Access Tuple Values
+Tuples actually use a `.` rather than `[]` to get their values, like so:
+```rs
+let name_and_age = ("Isaac", 54);
+println!("Name: {}, Age: {}", name_and_age.0, name_and_age.1); // Output: Name: Isaac, Age: 54
+```
+
+## Tuple Destructuring
+You can destructure a tuple in one line like this:
+```rs
+let name_and_age = ("Isaac", 54);
+let (name, age) = name_and_age;
+println!("Name: {}, Age: {}", name, age); // Output: Name: Isaac, Age: 54
+```
+
+## Mutable Tuples
+Just like arrays, you can make tuples mutable so their values can be edited:
+```rs
+let mut name_and_age = ("Isaac", 54);
+name_and_age.1 = 55;
+println!("{}", name_and_age.1); //Output: 55
+```
+
+# Constants
+Naming conventions for constants in Rust are typically [SCREAMING_SNAKE_CASE](https://en.wikipedia.org/?title=SCREAMING_SNAKE_CASE). Although again, choose whichever naming convention works best for you. No one's stopping you. However, you should expect Rust libraries to be written with these conventions.
+
+## Why Constant instead of Immutable Variable?
+- Constants are set at compile-time and cannot have any runtime values inside them, for example, this will throw an error:
+```rs
+let sum = 2 + 2;
+const FOUR = sum; // While sum is always 4, this had to be determined after compile time, so an E0435 error was thrown.
+```
+- Constants are both local and global scope when declared, whereas standard variables are only local scope.
+- Constants cannot be made mutable with the `mut` keyword.
+- The type *must* be explicitly declared for constants.
+- Constants cannot be shadowed
