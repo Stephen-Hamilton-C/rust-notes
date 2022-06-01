@@ -20,6 +20,12 @@ Sandbox to learn about Rust
     - [Integers](#integers)
     - [Decimals](#decimals)
     - [Strings](#strings)
+- [Arrays](#arrays)
+  - [Explicit Type Annotation](#explicit-type-annotation-1)
+  - [Initialize Array](#initialize-array)
+  - [Mutable Arrays](#mutable-arrays)
+  - [Array Length](#array-length)
+  - [Array Slicing](#array-slicing)
 
 # Cargo
 Cargo is the package manager, much like JavaScript's NPM or Yarn and Java's Gradle or Maven.
@@ -140,3 +146,42 @@ Explicitly typing strings is a little different:
 let my_string: &str = "Hello, world!";
 ```
 The `&` indicates the variable is a reference, much like C++. A string literal is a reference to that literal, so when explicitly typing a string that is initialized with a literal, you'll need that `&`.
+
+# Arrays
+
+## Explicit Type Annotation
+Type inference exists for arrays as well, but they can of course be explicitly typed too, with the format `[type; size]`:
+```rs
+let greetings: [&str; 3] = ["Hello, world!", "Hello, Gordon!", "Look Gordon, ropes!"];
+```
+
+## Initialize Array
+You can initialize an array rapidly, similar to JavaScript's Array.fill():
+```rs
+let my_array = [0; 3];
+println!("{:?}", my_array); // Output: [0, 0, 0]
+```
+
+## Mutable Arrays
+When an array is mutable, its values can be changed. It's size *cannot* be changed:
+```rs
+let mut mutable_array = [true; 3];
+mutable_array[2] = false;
+println!("{:?}", mutable_array); // Output: [true, true, false]
+```
+
+## Array Length
+Getting the length of an array is always slightly different in every language:
+```rs
+let my_array = [0; 3];
+println!("Array length: {}", my_array.len()); // Output: Array length: 3
+```
+
+## Array Slicing
+You can get references to portions of an array:
+```rs
+let big_array: [u8; 100] = [0; 100];
+let small_slice: &[u8] = &big_array[0..5];
+println!("slice length: {}", small_slice.len()); // Output: slice length: 5
+```
+Slices do not include the last index.
