@@ -32,6 +32,12 @@ Sandbox to learn about Rust
   - [Mutable Tuples](#mutable-tuples)
 - [Constants](#constants)
   - [Why Constant instead of Immutable Variable?](#why-constant-instead-of-immutable-variable)
+- [Operators](#operators)
+  - [Borrowing Operator](#borrowing-operator)
+  - [Dereferencing Operator](#dereferencing-operator)
+- [Miscellaneous](#miscellaneous)
+  - [Helpful Math Functions](#helpful-math-functions)
+    - [int::pow(number, power)](#intpownumber-power)
 
 # Cargo
 Cargo is the package manager, much like JavaScript's NPM or Yarn and Java's Gradle or Maven.
@@ -235,3 +241,46 @@ const FOUR = sum; // While sum is always 4, this had to be determined after comp
 - Constants cannot be made mutable with the `mut` keyword.
 - The type *must* be explicitly declared for constants.
 - Constants cannot be shadowed
+
+# Operators
+I won't go over the simple stuff like logical, arithmetic, bitwise, assignment, and type casting as they're the same as any other language.
+
+## Borrowing Operator
+There are two types of borrowing: **Shared Borrowing**, and **Mutable Borrowing**. Shared Borrowing is readonly while Mutable Borrowing can be shared and altered by a single variable, however the data will be inaccessible to other variables at that time.
+
+Shared borrowing:
+```rs
+let x: u8 = 10;
+let y: &u8 = &x;
+println!("x: {}, y: {}", x, y); // Output: x: 10, y: 10
+```
+
+Mutable Borrowing:
+```rs
+let mut x: u8 = 15;
+let y: &mut u8 = &mut x;
+println!("y: {}", y); // Output: y: 15
+```
+
+## Dereferencing Operator
+The dereferencing operator gets the value of a referenced variable, much like C pointers:
+```rs
+let mut x: u8 = 15;
+let y: &mut u8 = &mut x;
+println!("y: {}", y); // Output: y: 15
+*y = 20;
+println!("y: {}", y); // Output: y: 20
+println!("x: {}", x); // Output: x: 20
+```
+
+# Miscellaneous
+
+## Helpful Math Functions
+
+### int::pow(number, power)
+Takes the `number` to the power of `power`:
+```rs
+println!("{}", u8::pow(2, 3)); // Output: 8
+```
+
+
