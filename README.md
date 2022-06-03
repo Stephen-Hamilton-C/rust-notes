@@ -36,8 +36,13 @@ Sandbox to learn about Rust
   - [Borrowing Operator](#borrowing-operator)
   - [Dereferencing Operator](#dereferencing-operator)
 - [Miscellaneous](#miscellaneous)
+  - [Input](#input)
   - [Helpful Math Functions](#helpful-math-functions)
     - [int::pow(number, power)](#intpownumber-power)
+- [Conditional Expressions](#conditional-expressions)
+  - [If Statements](#if-statements)
+    - [Ternaries](#ternaries)
+  - [If Let Statements](#if-let-statements)
 
 # Cargo
 Cargo is the package manager, much like JavaScript's NPM or Yarn and Java's Gradle or Maven.
@@ -102,7 +107,7 @@ eprintln!("You cannot do that!");`
 # Variables
 Variables are declared similar to TypeScript and are **immutable** by default.
 
-Typically, Rust follows the [snake_case](https://en.wikipedia.org/wiki/Snake_case) naming convention, much like C++. But of course, you can follow whichever naming convention you prefer, but expect Rust libraries to use snake_case.
+Typically, Rust follows the [snake_case](https://en.wikipedia.org/wiki/Snake_case) naming convention, much like C++. But of course, you can follow whichever naming convention you prefer. However, if you don't use snake_case, Rust will harass you with warnings.
 
 ## Declaration
 Initializing a variable looks like this:
@@ -275,6 +280,19 @@ println!("x: {}", x); // Output: x: 20
 
 # Miscellaneous
 
+## Input
+Reading a line of input is processed by the `std::io` library. Here's a full snippet:
+```rs
+use std::io;
+
+fn main() {
+  println!("What is your name?");
+  let mut name = String::new(); // read_line requires a string *object*. Using a literal creates a reference, String::new() creates an object
+  io::stdin().read_line(&mut name).expect("Failed to read line");
+  println!("Hello, {}!", name.trim()); // The input string will also contain the newline at the end that the user had to enter in order to submit the input
+}
+```
+
 ## Helpful Math Functions
 
 ### int::pow(number, power)
@@ -283,4 +301,43 @@ Takes the `number` to the power of `power`:
 println!("{}", u8::pow(2, 3)); // Output: 8
 ```
 
+# Conditional Expressions
+I won't go into detail on the simple stuff, I'll simply point out some differences between the standard C-like syntax we're all used to and Rust's specific syntax
 
+## If Statements
+If statements don't require parenthesis to be wrapped around their expressions. Both of these if statements are valid:
+```rs
+let on = true;
+if on {
+  turnOn();
+}
+if (!on) {
+  turnOff();
+}
+```
+However, the Rust compiler will give warnings if you give unnecessary parenthesis.
+
+### Ternaries
+Ternaries are similar to Kotlin's:
+```rs
+let age = 18;
+let message = if age >= 18 { "You're an adult!" } else { "You're not an adult yet." };
+println!("{}", message);
+```
+
+## If Let Statements
+If let statements do pattern matching with scrutinee expressions. After the `let`, you define a pattern and then an `=` and a scrutinee expression. A common use that I found is comparing enums:
+```rs
+enum Foo {
+  Bar,
+  Baz
+}
+
+let bar = Foo::Bar;
+
+if let Foo::Bar = bar {
+  println!("a is Bar");
+}
+
+// This will output "a is Bar"
+```
