@@ -35,14 +35,19 @@ Sandbox to learn about Rust
 - [Operators](#operators)
   - [Borrowing Operator](#borrowing-operator)
   - [Dereferencing Operator](#dereferencing-operator)
-- [Miscellaneous](#miscellaneous)
-  - [Input](#input)
-  - [Helpful Math Functions](#helpful-math-functions)
-    - [int::pow(number, power)](#intpownumber-power)
 - [Conditional Expressions](#conditional-expressions)
   - [If Statements](#if-statements)
     - [Ternaries](#ternaries)
   - [If Let Statements](#if-let-statements)
+- [Loops](#loops)
+  - [loop](#loop)
+  - [for](#for)
+  - [Return Values from loops](#return-values-from-loops)
+  - [Labeling Loops](#labeling-loops)
+- [Miscellaneous](#miscellaneous)
+  - [Input](#input)
+  - [Helpful Math Functions](#helpful-math-functions)
+    - [int::pow(number, power)](#intpownumber-power)
 
 # Cargo
 Cargo is the package manager, much like JavaScript's NPM or Yarn and Java's Gradle or Maven.
@@ -278,29 +283,6 @@ println!("y: {}", y); // Output: y: 20
 println!("x: {}", x); // Output: x: 20
 ```
 
-# Miscellaneous
-
-## Input
-Reading a line of input is processed by the `std::io` library. Here's a full snippet:
-```rs
-use std::io;
-
-fn main() {
-  println!("What is your name?");
-  let mut name = String::new(); // read_line requires a string *object*. Using a literal creates a reference, String::new() creates an object
-  io::stdin().read_line(&mut name).expect("Failed to read line");
-  println!("Hello, {}!", name.trim()); // The input string will also contain the newline at the end that the user had to enter in order to submit the input
-}
-```
-
-## Helpful Math Functions
-
-### int::pow(number, power)
-Takes the `number` to the power of `power`:
-```rs
-println!("{}", u8::pow(2, 3)); // Output: 8
-```
-
 # Conditional Expressions
 I won't go into detail on the simple stuff, I'll simply point out some differences between the standard C-like syntax we're all used to and Rust's specific syntax
 
@@ -340,4 +322,90 @@ if let Foo::Bar = bar {
 }
 
 // This will output "a is Bar"
+```
+
+# Loops
+While loops are exactly what you expect from a while loop, so I have no notes on those.
+
+## loop
+The `loop` keyword allows you to create an infinite loop that only stops on break. Useful for cli applications that continuously wait for commands until the user runs an exit command:
+```rs
+loop {
+  println!("This is the song that never ends");
+  println!("it just goes on and on, my friend");
+}
+```
+
+## for
+The `for` syntax is much more `foreach` like in other languages and less C-like. It's always `for loop_variable in collection_or_range`. This makes looping through collections much simpler without the performance loss other languages might have for using this simpler syntax:
+```rs
+let greetings = ["Hello!", "Hi!", "Hey!", "Good morning!"];
+for greeting in greetings {
+  print!("{} ", greeting); // Hello! Hi! Hey! Good morning!
+}
+```
+Looping through a range of numbers is still possible, and feels more Python-like. Note that ranges do not include the maximum number:
+```rs
+for number in 1..5 {
+  print!("{} ", number); // 1 2 3 4
+}
+```
+You can still go backwards through a range with `.rev()`:
+```rs
+for number in(1..11).rev() {
+  print!("{}, ", number);
+}
+println!("Liftoff!");
+// 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, Liftoff!
+```
+
+## Return Values from loops
+`loop`s can return values like so:
+```rs
+let numbers = [1, 2, 3, 4, 5];
+let mut i: usize = 0;
+let found_index = loop {
+  if numbers[i] == 3 {
+      break i;
+  }
+  i += 1;
+};
+println!("Found 3 at index {}", found_index); // Output: Found 3 at index 2
+```
+
+## Labeling Loops
+Just like in Kotlin, you can label loops like this and then break or continue that loop within another nested loop like so:
+```rs
+'rows for row in (1..4) {
+  'columns for column in (1..4) {
+    if column == 3 {
+      break 'rows
+    }
+  }
+}
+```
+
+# Miscellaneous
+
+## Input
+Reading a line of input is processed by the `std::io` library. Here's a full snippet:
+```rs
+use std::io;
+
+fn main() {
+  print!("What is your name?: ");
+  let mut name = String::new(); // read_line requires a string *object*. Using a literal creates a reference, String::new() creates an object
+  io::stdin()
+    .read_line(&mut name)
+    .expect("Failed to read line");
+  println!("Hello, {}!", name.trim()); // The input string will also contain the newline at the end that the user had to enter in order to submit the input
+}
+```
+
+## Helpful Math Functions
+
+### int::pow(number, power)
+Takes the `number` to the power of `power`:
+```rs
+println!("{}", u8::pow(2, 3)); // Output: 8
 ```
