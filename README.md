@@ -44,6 +44,9 @@ Sandbox to learn about Rust
   - [for](#for)
   - [Return Values from loops](#return-values-from-loops)
   - [Labeling Loops](#labeling-loops)
+- [Ownership](#ownership)
+  - [Rules](#rules)
+  - [Passing Ownership](#passing-ownership)
 - [Miscellaneous](#miscellaneous)
   - [Input](#input)
   - [Helpful Math Functions](#helpful-math-functions)
@@ -168,6 +171,14 @@ Explicitly typing strings is a little different:
 let my_string: &str = "Hello, world!";
 ```
 The `&` indicates the variable is a reference, much like C++. A string literal is a reference to that literal, so when explicitly typing a string that is initialized with a literal, you'll need that `&`.
+
+Now, `&str` is used when the string doesn't change and has a fixed width. Similar to a `char` array in C. However, the `String` type allows all the classic modification of strings as one expects from other languages. These `String`s can be created like this:
+```rs
+let mut my_heap_string = String::from("Hey")
+my_heap_string.push_str(" there!")
+println!("{}", my_heap_string) // Output: Hey there!
+```
+Note that `String`s are stored on the heap while `str`s are stored on the stack. Depending on your use case, you'll have to be careful with `String`s.
 
 # Arrays
 
@@ -384,6 +395,77 @@ Just like in Kotlin, you can label loops like this and then break or continue th
   }
 }
 ```
+
+# Ownership
+Now we get into Rust's flagship feature.
+
+## Rules
+- Each value has a variable that is called its *owner*.
+- There can only be one owner at a time.
+- When the owner goes out of scope, the value is dropped.
+
+## Passing Ownership
+When you pass a variable into another method, you also pass ownership of that variable.
+
+```rs
+fn main() {
+  let mut message = String::from("Dear Sam, ");
+  print_message(message);
+  message.push_str("I'm writing to you about..."); // Compiler error is thrown here
+}
+
+fn print_message(message: String) {
+  println!("{}", message);
+}
+```
+
+See, `message` is no longer valid after the `print_message` method because ownership is transferred to that method. Once the method runs, the variable goes out of scope and is dropped. If we wanted to continue using `message` after running `print_message` with it, then we simply call `message.clone()` to pass a copy of `message` into `print_message`:
+```rs
+fn main() {
+  let mut message = String::from("Dear Sam, ");
+  print_message(message.clone());
+  message.push_str("I'm writing to you about..."); // Compiler is happy with this because printMessage owns a clone of message
+}
+
+fn print_message(message: String) {
+  println!("{}", message);
+}
+```
+
+This does not apply to primitives like the integer types, `bool`, float types, `char`, tuples with primitives, and `str`. Primitives automatically clone their values when ownership is to be transferred, so they can continue to be used:
+```rs
+fn main() {
+  let x = 16;
+  let y = 4;
+  print_sum(x, y);
+  let z = x - y; // Compiler is happy with this because x and y have the Copy trait and automatically copy their value since it is so cheap to do so.
+}
+
+fn print_sum(num1: i32, num2: i32) {
+  println!("{}", num1 + num2);
+}
+```
+
+## References
+References *always* point to a valid value, unlike pointers.
+
+Example from the [Rust docs](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html#references-and-borrowing):
+```rs
+fn main() {
+  let s1 = String::from("hello");
+
+  let len = calculate_length(&s1);
+
+  println!("The length of '{}' is {}.", s1, len);
+}
+
+fn calculate_length(s: &String) -> usize {
+  s.len()
+}
+```
+With a reference, we can still access `s1` after `calculate_length` was run because we didn't transfer ownership to `calculate_length`. We instead gave it a reference.
+
+This is called `borrowing` in Rust.
 
 # Miscellaneous
 
