@@ -20,6 +20,7 @@ Sandbox to learn about Rust
     - [Integers](#integers)
     - [Decimals](#decimals)
     - [Strings](#strings)
+      - [String Slicing](#string-slicing)
 - [Arrays](#arrays)
   - [Explicit Type Annotation](#explicit-type-annotation-1)
   - [Initialize Array](#initialize-array)
@@ -30,6 +31,12 @@ Sandbox to learn about Rust
   - [Access Tuple Values](#access-tuple-values)
   - [Tuple Destructuring](#tuple-destructuring)
   - [Mutable Tuples](#mutable-tuples)
+- [Structs](#structs)
+  - [Shorthand Initialization](#shorthand-initialization)
+  - [Struct Update Syntax](#struct-update-syntax)
+  - [Tuple Structs](#tuple-structs)
+  - [Unit-Like Structs](#unit-like-structs)
+  - [Strings in Structs](#strings-in-structs)
 - [Constants](#constants)
   - [Why Constant instead of Immutable Variable?](#why-constant-instead-of-immutable-variable)
 - [Operators](#operators)
@@ -48,8 +55,8 @@ Sandbox to learn about Rust
   - [Rules](#rules)
   - [Passing Ownership](#passing-ownership)
   - [References](#references)
-  - [Mutable References](#mutable-references)
-  - [Dangling References](#dangling-references)
+    - [Mutable References](#mutable-references)
+    - [Dangling References](#dangling-references)
 - [Miscellaneous](#miscellaneous)
   - [Input](#input)
   - [Helpful Math Functions](#helpful-math-functions)
@@ -183,6 +190,28 @@ println!("{}", my_heap_string) // Output: Hey there!
 ```
 Note that `String`s are stored on the heap while `str`s are stored on the stack. Depending on your use case, you'll have to be careful with `String`s.
 
+#### String Slicing
+String slices are like substrings, but they reference a part of a `String`. They are Python-like in their syntax:
+```rs
+let hello_world = String::from("Hello, world!");
+
+let hello: &str = &hello_world[..5];
+let world: &str = &hello_world[7..12];
+println!("{}, {}!", hello, world); // Output: Hello, world!
+```
+The starting index is inclusive, however, the ending index is not inclusive. The `o` in `Hello` is actually index 4, and the `,` is at index 5. However, the `,` is not included in the slice because the ending index is not inclusive.
+
+Also note that the starting index is missing from `hello`'s slice. This is because that slice starts at the very beginning of the string at index 0. If the string starts at 0, it is not needed and can simply be omitted.
+
+The same can be said for the ending index. If the ending index is omitted, the slice will go from the starting index to the end of the string.
+
+This also means you can omit both and end up with a slice that is the same as the string:
+```rs
+let hello_world = String::from("Hello, world!");
+let slice: &str = &hello_world[..];
+println!("{}", slice); // Output: Hello, world!
+```
+
 # Arrays
 
 ## Explicit Type Annotation
@@ -222,6 +251,8 @@ println!("slice length: {}", small_slice.len()); // Output: slice length: 5
 ```
 Slices do not include the last index.
 
+All the rules of [String slicing](#string-slicing) apply here as well.
+
 # Tuples
 Essentially an array with different types in fixed locations.
 ```rs
@@ -251,6 +282,93 @@ let mut name_and_age = ("Isaac", 54);
 name_and_age.1 = 55;
 println!("{}", name_and_age.1); //Output: 55
 ```
+
+# Structs
+Structs are basically just like C. All they contain are public values. No methods or anything extra special.
+```rs
+struct Book {
+  name: String,
+  author: String,
+  page_count: usize,
+}
+
+let dune = Book {
+  name: String::from("Dune"),
+  author: String::from("Frank Herbert"),
+  page_count: 412,
+};
+println!("Name: {}, Author: {}, Pages: {}", dune.name, dune.author, dune.page_count);
+// Name: Dune, Author: Frank Herbert, Pages: 412
+```
+
+Structs are immutable by default. To make a struct mutable, you mark the variable with `mut` as usual. You cannot make only some properties mutable. Either the entire struct is immutable or the entire struct is mutable.
+
+## Shorthand Initialization
+Similar to JavaScript objects, you can use initialization shorthand, as long as the variables have the same name as the struct's properties, like this:
+```rs
+let name = String::from("Dune");
+let author = String::from("Frank Herbert");
+let page_count = 412;
+let dune = Book { name, author, page_count };
+println!("Name: {}, Author: {}, Pages: {}", dune.name, dune.author, dune.page_count);
+// Name: Dune, Author: Frank Herbert, Pages: 412
+```
+
+## Struct Update Syntax
+Take the following structs:
+```rs
+struct Car {
+  make: String,
+  model: String,
+  year: usize,
+  color: String,
+}
+
+let blue_camry = Car {
+  make: String::from("Toyota"),
+  model: String::from("Camry"),
+  year: 2014,
+  color: String::from("White"),
+};
+
+let red_camry = Car {
+  make: blue_camry.make,
+  model: blue_camry.model,
+  year: blue_camry.year,
+  color: String::from("Red"),
+};
+```
+Heesh, that's a lot of repetition there, isn't it? Just needed to change one property to make the `red_camry`. Rust thankfully provides what's called the Struct Update Syntax to make this easier and less boilerplate:
+```rs
+let red_camry = Car {
+  color: String::from("Red"),
+  ..blue_camry
+};
+```
+
+## Tuple Structs
+So these are a little weird, they're structs that have nameless properties - the properties are accessed like tuples. This allows you to give your tuples names:
+```rs
+struct Color(u8, u8, u8);
+
+let red = Color(255, 0, 0);
+println!("Red: rgb({}, {}, {})", red.0, red.1, red.2);
+// Red: rgb(255, 0, 0)
+```
+
+## Unit-Like Structs
+Defining a tuple struct with no types or properties results in a unit-like struct. As the [Rust docs](https://doc.rust-lang.org/book/ch05-01-defining-structs.html#unit-like-structs-without-any-fields) say, these are useful to implement traits on some type but the trait doesn't have any data associated with it. The trait is simply used as a marker.
+```rs
+// Example taken from Rust docs linked above
+struct AlwaysEqual;
+
+fn main() {
+  let subject = AlwaysEqual;
+}
+```
+
+## Strings in Structs
+I used the `String` type rather than the `&str` type in the struct because the struct should own all its values. If you try to use the `&str` type on a struct, error [E0106](https://github.com/rust-lang/rust/blob/master/compiler/rustc_error_codes/src/error_codes/E0106.md) will be thrown.
 
 # Constants
 Naming conventions for constants in Rust are typically [SCREAMING_SNAKE_CASE](https://en.wikipedia.org/?title=SCREAMING_SNAKE_CASE). Although again, choose whichever naming convention works best for you. No one's stopping you. However, you should expect Rust libraries to be written with these conventions.
@@ -470,7 +588,7 @@ With a reference, we can still access `s1` after `calculate_length` was run beca
 
 This is called `borrowing` in Rust.
 
-## Mutable References
+### Mutable References
 Mutable References are, you guessed it, references that can be changed.
 ```rs
 fn main() {
@@ -520,7 +638,7 @@ Also remember, an infinite amount of immutable references can exist at any time 
 
 tl;dr, only one mutable reference or an infinite amount of immutable references can exist at once.
 
-## Dangling References
+### Dangling References
 Dangling References do not exist in Rust. While in C++ for example, you can end up with a dangling pointer, Rust will not compile code that could have a dangling reference:
 ```rs
 fn main() {
