@@ -47,6 +47,9 @@ Sandbox to learn about Rust
 - [Ownership](#ownership)
   - [Rules](#rules)
   - [Passing Ownership](#passing-ownership)
+  - [References](#references)
+  - [Mutable References](#mutable-references)
+  - [Dangling References](#dangling-references)
 - [Miscellaneous](#miscellaneous)
   - [Input](#input)
   - [Helpful Math Functions](#helpful-math-functions)
@@ -466,6 +469,69 @@ fn calculate_length(s: &String) -> usize {
 With a reference, we can still access `s1` after `calculate_length` was run because we didn't transfer ownership to `calculate_length`. We instead gave it a reference.
 
 This is called `borrowing` in Rust.
+
+## Mutable References
+Mutable References are, you guessed it, references that can be changed.
+```rs
+fn main() {
+  let mut hello = String::from("Hello");
+  finish_sentence(&mut hello);
+  println!("{}", hello); // Output: Hello, world!
+}
+
+fn finish_sentence(word: &mut String) {
+  word.push_str(", world!");
+}
+```
+The only caveat with mutable references is that you can only have a single mutable reference to data at a time. Trying to create two mutable references throws an error. This prevents what Rust calls a **Data Race**. This happens when the following occur:
+- Two or more pointers access the same data at the same time.
+- At least one of the pointers is being used to write to the data.
+- There's no mechanism being used to synchronize access to the data.
+
+We could create a new scope to help ourselves with this:
+```rs
+let mut x = String::from("Hello, world!");
+{
+  let y = &mut x;
+}
+let z = &mut x;
+```
+This code will compile, because once we come out of the braces, we have exited the scope in which `y` resides. This means that `y` no longer exists and has returned the borrowed mutable reference to `x`. This allows `z` to come and borrow that mutable reference.
+
+One other rule, you cannot create a mutable reference if another immutable reference exists on that data. Again, the idea is to prevent data races.
+
+Something to note, immutable references go into scope when they are called and then go out of scope after their last use. So the following is still valid:
+```rs
+let mut x = String::from("Hello, world!");
+let y = &x;
+println!("{}", y);
+let z = &mut x;
+z.push_str(" Goodnight!");
+println!("{}", z);
+```
+However, this is invalid, and will not compile:
+```rs
+let mut x = String::from("Hello, world!");
+let y = &x;
+let z = &mut x;
+println!("{}, {}", y, z);
+```
+Also remember, an infinite amount of immutable references can exist at any time with each other, just not immutable and mutable.
+
+tl;dr, only one mutable reference or an infinite amount of immutable references can exist at once.
+
+## Dangling References
+Dangling References do not exist in Rust. While in C++ for example, you can end up with a dangling pointer, Rust will not compile code that could have a dangling reference:
+```rs
+fn main() {
+  let dangling_ref = make_dangle();
+}
+
+fn make_dangle() -> &String { // Error: missing lifetime specifier
+  let hello = String::from("Hello, world!");
+  return &hello;
+}
+```
 
 # Miscellaneous
 
