@@ -37,6 +37,8 @@ Sandbox to learn about Rust
   - [Tuple Structs](#tuple-structs)
   - [Unit-Like Structs](#unit-like-structs)
   - [Strings in Structs](#strings-in-structs)
+  - [Methods](#methods)
+  - [Associated Functions](#associated-functions)
 - [Constants](#constants)
   - [Why Constant instead of Immutable Variable?](#why-constant-instead-of-immutable-variable)
 - [Operators](#operators)
@@ -284,7 +286,7 @@ println!("{}", name_and_age.1); //Output: 55
 ```
 
 # Structs
-Structs are basically just like C. All they contain are public values. No methods or anything extra special.
+Structs are basically just like C. All they contain are public values. However, they can also implement methods as you'll see in [Method Syntax](#method-syntax)
 ```rs
 struct Book {
   name: String,
@@ -369,6 +371,75 @@ fn main() {
 
 ## Strings in Structs
 I used the `String` type rather than the `&str` type in the struct because the struct should own all its values. If you try to use the `&str` type on a struct, error [E0106](https://github.com/rust-lang/rust/blob/master/compiler/rustc_error_codes/src/error_codes/E0106.md) will be thrown.
+
+## Methods
+So usually structs simply contain data in other languages. Rust is special - we can implement methods in structs.
+
+Quick note, functions associated with structs are called methods. All methods are functions, but not all functions are methods. A function not belonging to anything (such as the main function) is not a method.
+```rs
+struct Person {
+  first_name: String,
+  last_name: String,
+}
+
+impl Person {
+  fn greeting(&self) {
+    println!("{} says: Hello!", self.first_name);
+  }
+}
+
+let john_doe = Person {
+  first_name: String::from("John"),
+  last_name: String::from("Doe"),
+};
+john_doe.greeting(); // John says: Hello!
+```
+Methods always have the `&self` argument, much like Python. This is simply the instance of the struct that the method was called on.
+
+Methods and properties can share a name, like so:
+```rs
+struct Person {
+  first_name: String,
+  last_name: String,
+  greeting: String,
+}
+
+impl Person {
+  fn greeting(&self) {
+    println!("{} says: {}", self.first_name, self.greeting);
+  }
+}
+
+let john_doe = Person {
+  first_name: String::from("John"),
+  last_name: String::from("Doe"),
+  greeting: String::from("HenLo!"),
+};
+john_doe.greeting(); // John says: HenLo!
+println!("{}", john_doe.greeting); // HenLo!
+```
+Also, it is allowed to have multiple `impl` blocks, although this could be potentially confusing.
+
+## Associated Functions
+Associated functions are functions on the struct that don't take the `self` argument (These are not called methods!). They are often used as constructors. A very common associated function that's used a lot is `String::from()`. These are more similar to Java's static functions.
+```rs
+struct Rectangle {
+  width: usize,
+  height: usize,
+}
+
+impl Rectangle {
+  fn square(size: usize) -> Rectangle {
+    return Rectangle {
+      width: size,
+      height: size,
+    }
+  }
+}
+
+let square = Rectangle::square(10);
+println!("width: {}, height: {}", square.width, square.height); // width: 10, height: 10
+```
 
 # Constants
 Naming conventions for constants in Rust are typically [SCREAMING_SNAKE_CASE](https://en.wikipedia.org/?title=SCREAMING_SNAKE_CASE). Although again, choose whichever naming convention works best for you. No one's stopping you. However, you should expect Rust libraries to be written with these conventions.
