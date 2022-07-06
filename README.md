@@ -39,6 +39,12 @@ Sandbox to learn about Rust
   - [Strings in Structs](#strings-in-structs)
   - [Methods](#methods)
   - [Associated Functions](#associated-functions)
+- [Enums](#enums)
+  - [match](#match)
+    - [Default](#default)
+    - [Simplifying with `if let`](#simplifying-with-if-let)
+  - [Enum Values](#enum-values)
+  - [The Option Enum](#the-option-enum)
 - [Constants](#constants)
   - [Why Constant instead of Immutable Variable?](#why-constant-instead-of-immutable-variable)
 - [Operators](#operators)
@@ -439,6 +445,120 @@ impl Rectangle {
 
 let square = Rectangle::square(10);
 println!("width: {}, height: {}", square.width, square.height); // width: 10, height: 10
+```
+
+# Enums
+
+## match
+`match`es are a lot like switch statements in other languages.
+```rs
+enum Color {
+  Red,
+  Yellow,
+  Green,
+}
+
+fn get_rgb(color: &Color) -> (u8, u8, u8) {
+  match color {
+    Color::Red => (255, 0, 0),
+    Color::Yellow => (255, 255, 0),
+    Color::Green => (0, 255, 0),
+  }
+}
+
+println!("{:?}", get_rgb(&Color::Yellow)); // (255, 255, 0)
+```
+
+`match`es can of course have blocks:
+```rs
+fn get_rgb(color: &Color) -> (u8, u8, u8) {
+  match color {
+    Color::Red => {
+      println!("Stop!");
+      (255, 0, 0)
+    },
+    // ...
+  }
+}
+```
+
+### Default
+In the switch statements of other languages, they have the default label which is used when the value doesn't match any case given. Rust has this as well in its `match` statements. This is the `_`. In Rust, `_` is a sort of 'unused' marker. It's useful to break out tuples into a single variable, or in this case, to define default behavior if an enum doesn't match any specific case. Take the Color enum from earlier:
+```rs
+let color = Color::Green;
+match color {
+  Color::Red => println!("Color is red."),
+  _ => println!("Color is not red."),
+}
+
+// Output:
+// Color is not red.
+```
+
+You can also define no behavior if the value doesn't match any desired case:
+```rs
+match color {
+  Color::Red => println!("Color is red."),
+  _ => (),
+}
+```
+If `color` is `Color::Red`, then `Color is red.` gets printed. Otherwise, nothing happens.
+
+### Simplifying with `if let`
+See [if let statements](#if-let-statements)
+
+## Enum Values
+You can store types in enums, similar to Java's enums. However, the value is set at creation of the enum rather than in the enum itself. In other words, the value won't be the same for the same variant of the enum.
+```rs
+enum Color {
+  Red(String),
+  Yellow,
+  Green,
+}
+
+fn get_rgb(color: &Color) -> (u8, u8, u8) {
+  match color {
+    Color::Red(message) => {
+      println!("{}", message);
+      (255, 0, 0)
+    },
+    Color::Yellow => (255, 255, 0),
+    Color::Green => (0, 255, 0),
+  }
+}
+
+let color = Color::Red(String::from("Stop!"));
+println!("{:?}", get_rgb(&color));
+
+// Output:
+// Stop!
+// (255, 0, 0)
+```
+
+## The Option Enum
+The `Option` enum is Rust's way of having null safety. Null doesn't exist in Rust, but there are some situations where having null is useful. The built-in `Option` enum has only two variants: `Some(T)` and `None`. Here's an example using an `Option` enum to take the absolute value of a number:
+```rs
+fn abs(num: Option<isize>) -> Option<isize> {
+  match num {
+    Some(number) => {
+      if (number < 0) {
+        Some(number * -1)
+      } else {
+        Some(number)
+      }
+    }
+    None => None,
+  }
+}
+
+let number = -20;
+match abs(Some(number)) {
+  Some(value) => println!("Absolute value of {} is {}", number, value),
+  None => println!("No value given."),
+}
+
+// Output:
+// Absolute value of -20 is 20
 ```
 
 # Constants
