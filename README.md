@@ -21,12 +21,25 @@ Sandbox to learn about Rust
     - [Decimals](#decimals)
     - [Strings](#strings)
       - [String Slicing](#string-slicing)
+      - [String Formatting](#string-formatting)
+      - [Iterating](#iterating)
 - [Arrays](#arrays)
   - [Explicit Type Annotation](#explicit-type-annotation-1)
   - [Initialize Array](#initialize-array)
   - [Mutable Arrays](#mutable-arrays)
   - [Array Length](#array-length)
   - [Array Slicing](#array-slicing)
+- [Collections](#collections)
+  - [Vectors](#vectors)
+    - [Adding Values](#adding-values)
+    - [Getting Values](#getting-values)
+    - [Iterating](#iterating-1)
+    - [Multiple Types](#multiple-types)
+  - [Hash Maps](#hash-maps)
+    - [Adding Pairs](#adding-pairs)
+    - [Add Pair if it doesn't exist](#add-pair-if-it-doesnt-exist)
+    - [Getting Values](#getting-values-1)
+    - [Iterating](#iterating-2)
 - [Tuples](#tuples)
   - [Access Tuple Values](#access-tuple-values)
   - [Tuple Destructuring](#tuple-destructuring)
@@ -198,6 +211,16 @@ println!("{}", my_heap_string) // Output: Hey there!
 ```
 Note that `String`s are stored on the heap while `str`s are stored on the stack. Depending on your use case, you'll have to be careful with `String`s.
 
+Also, `str`s can be converting to a `String` like so:
+```rs
+let my_str = "Hello!";
+let my_string = my_str.to_string();
+println!("{} {}", my_str, my_string);
+// Output:
+// Hello! Hello!
+```
+As you can see, to_string() copies the contents to a `String` type. So both can be used without having to worry about borrowing.
+
 #### String Slicing
 String slices are like substrings, but they reference a part of a `String`. They are Python-like in their syntax:
 ```rs
@@ -218,6 +241,38 @@ This also means you can omit both and end up with a slice that is the same as th
 let hello_world = String::from("Hello, world!");
 let slice: &str = &hello_world[..];
 println!("{}", slice); // Output: Hello, world!
+```
+
+#### String Formatting
+String formatting is similar to how `println` is formatted:
+```rs
+let first_name = "Adam";
+let last_name = "Jensen";
+let full_name = format!("{} {}", first_name, last_name);
+println!("{}", full_name);
+
+// Output:
+// Adam Jensen
+```
+
+#### Iterating
+For `str`s and `String`s alike:
+```rs
+for char in "Hello!".chars() {
+  println!("{}", char);
+}
+
+for char in String::from("Hello!").chars() {
+  println!("{}", char);
+}
+
+//Output for both:
+// H
+// e
+// l
+// l
+// o
+// !
 ```
 
 # Arrays
@@ -260,6 +315,185 @@ println!("slice length: {}", small_slice.len()); // Output: slice length: 5
 Slices do not include the last index.
 
 All the rules of [String slicing](#string-slicing) apply here as well.
+
+# Collections
+
+## Vectors
+Vectors are basically arrays stored on the heap, meaning their size can be changed at runtime. To create an empty vector, simply do this:
+```rs
+let my_vector: Vec<isize> = Vec::new();
+```
+
+You can initialize a vector like this:
+```rs
+let my_vector = vec![1, 2, 3];
+```
+
+When a vector is dropped out of scope, **all of its values are also dropped out of scope.** Keep this in mind if you start running into borrowing issues.
+
+### Adding Values
+Of course, you must add the `mut` keyword if you actually want to add, remove, or change anything inside the vector. Adding values to a vector is done like so:
+```rs
+let mut my_vector: Vec<isize> = Vec::new()
+my_vector.push(1);
+my_vector.push(2);
+my_vector.push(3);
+```
+
+Note that borrowing a value from a vector and then changing the vector will cause [borrow errors](https://github.com/rust-lang/rust/blob/master/compiler/rustc_error_codes/src/error_codes/E0502.md). So the following code is invalid:
+```rs
+let mut my_vector = vec![1, 2, 3];
+let first = &my_vector[0];
+my_vector.push(4); // E0502 here!
+println!("The first element is {}", first);
+```
+
+
+### Getting Values
+There are two ways to retrieve values from a vector. The classic brackets syntax or with `get(index)`.
+```rs
+let greetings: Vec<&str> = vec!["Hello!", "Howdy!", "Hey!"];
+let first_greeting: &str = greetings[0];
+match greetings.get(0) {
+  Some(greeting) => println!("{}", greeting),
+  None => println!("uh, hi?"),
+}
+```
+`get(index)` is safer than the classic bracket syntax since it handles out of bounds exceptions. If you were to call `greetings[10]`, the code would panic. However, running a `match` on `greetings.get(10)` would simply call the code for `None`.
+
+### Iterating
+If you're not changing any values:
+```rs
+let greetings = vec!["Hello!", "Howdy!", "Hey!"];
+for greeting in &greetings {
+  println!("{}", greeting);
+}
+
+// Output:
+// Hello!
+// Howdy!
+// Hey!
+```
+
+If you're changing values:
+```rs
+let mut nums: Vec<isize> = vec![1, 2, 3];
+for num: &mut isize in &mut nums {
+  *num += 10;
+}
+println!("{:?}", nums);
+// Output:
+// [11, 12, 13]
+```
+
+### Multiple Types
+Storing multiple types in one vector is impossible. However, there is a workaround. Enums are one type, and each enum variant can store a type. So you could do something like this:
+```rs
+enum Number {
+  Int(isize),
+  Float(f64),
+}
+
+let nums: Vec<Number> = vec![Number::Int(23), Number::Float(3.14)];
+for num in &nums {
+  match num {
+    Number::Int(value) => println!("{} is an integer", value),
+    Number::Float(value) => println!("{} is a decimal number", value),
+  }
+}
+
+// Output:
+// 23 is an integer
+// 3.14 is a decimal number
+```
+
+## Hash Maps
+Hash maps are the standard map type in Rust. You'll need to import a built-in standard library to use hash maps. Here's how to create an empty one:
+```rs
+use std::collections::HashMap;
+
+let my_map: HashMap<String, isize> = HashMap::new();
+```
+
+You can initialize a hash map like this:
+```rs
+let numbers = HashMap::from([
+  ("One", 1),
+  ("Two", 2),
+  ("Three", 3),
+]);
+```
+
+### Adding Pairs
+You can add entries to the hash map like this:
+```rs
+let mut numbers = HashMap::new();
+numbers.insert("One", 1);
+numbers.insert("Two", 2);
+numbers.insert("Three", 3);
+```
+
+Note that inserting values that don't implement `copy` transfers ownership to the map. So the following code is invalid:
+```rs
+let key = String::from("One");
+let value: isize = 1;
+let mut numbers = HashMap::new();
+numbers.insert(key, value);
+println!("{}", value);
+println!("{}", key); // E0382 here!
+```
+[E0382](https://github.com/rust-lang/rust/blob/master/compiler/rustc_error_codes/src/error_codes/E0382.md) gets thrown when trying to print `key` because `String` does not implement `copy`. However, printing `value` is fine because `isize` implements `copy`. A workaround for this is simply doing this when inserting:
+```rs
+numbers.insert(key.clone(), value);
+```
+This will copy the `String` and transfer the copy's ownership rather than the original value.
+
+### Add Pair if it doesn't exist
+There are some cases where you may want to add a key-value pair to the map if it doesn't exist. In other languages, you have to check if the map doesn't have the key, and then set the key to a default value. In Rust, it's much easier:
+```rs
+let mut numbers = HashMap::from([
+  ("One", 1),
+  ("Two", 2),
+  ("Three", 3),
+]);
+numbers.entry("Three").or_insert(30);
+numbers.entry("Four").or_insert(4);
+println!("{:?}", numbers);
+// {"One": 1, "Two": 2, "Three": 3, "Four": 4}
+```
+As you can see, `"Three"` didn't get mapped to `30` because it already had a value of `3`. However, `"Four"` was added and mapped to `4` since it didn't exist on the map yet.
+
+### Getting Values
+Just like vectors, there's bracket syntax or `get(key)`.
+```rs
+let numbers = HashMap::from([
+  ("One", 1),
+  ("Two", 2),
+  ("Three", 3),
+]);
+println!("{}", numbers["One"]);
+match numbers.get("One") {
+  Some(value) => println!("{}", value),
+  None => println!("No number for One"),
+}
+```
+Bracket syntax is less safe than `get(key)` us usual. If a key doesn't exist when using bracket syntax, the code will panic.
+
+### Iterating
+```rs
+let numbers = HashMap::from([
+  ("One", 1),
+  ("Two", 2),
+  ("Three", 3),
+]);
+for (key, value) in &numbers {
+  println!("{}: {}", key, value);
+}
+
+// One: 1
+// Two: 2
+// Three: 3
+```
 
 # Tuples
 Essentially an array with different types in fixed locations.
