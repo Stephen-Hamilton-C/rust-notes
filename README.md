@@ -78,6 +78,12 @@ Sandbox to learn about Rust
   - [References](#references)
     - [Mutable References](#mutable-references)
     - [Dangling References](#dangling-references)
+- [Catching Errors](#catching-errors)
+  - [Unrecoverable Errors](#unrecoverable-errors)
+  - [Recoverable Errors](#recoverable-errors)
+    - [Alternate Result Handling](#alternate-result-handling)
+    - [Quickly Propagating Errors](#quickly-propagating-errors)
+    - [Result on `main()`](#result-on-main)
 - [Miscellaneous](#miscellaneous)
   - [Input](#input)
   - [Helpful Math Functions](#helpful-math-functions)
@@ -1075,6 +1081,107 @@ fn make_dangle() -> &String { // Error: missing lifetime specifier
   return &hello;
 }
 ```
+
+# Catching Errors
+In Rust, there are two types of errors: recoverable errors, and unrecoverable errors. This is different than simple Exceptions that may be thrown in other languages.
+
+## Unrecoverable Errors
+Unrecoverable errors are thrown with the `panic!` macro. It takes one `&str` argument that is simply a message explaining why the code panicked.
+```rs
+fn main() {
+  panic!("I'm having an existential crisis!");
+}
+```
+
+## Recoverable Errors
+Recoverable errors return a `Result<T, E>` enum. This enum has two variants, `Ok(T)` and `Err(E)`. We can handle this with a `match` expression. A good example to see this in action is opening a file, since there could be a bunch of common reasons why a file won't open.
+```rs
+use std::fs::File;
+
+let file = match File::open("hello.txt") {
+  Ok(file) => file,
+  Err(error) => panic!("Problem opening the file: {:?}", error.to_string()),
+};
+```
+If the file exists, then the File object is stored into the `file` variable to use later. However, we cannot continue without the file, so we simply panic and print why the file couldn't be opened with `error.to_string()`.
+
+We can handle different kinds of errors. If the error is a NotFound error, we can attempt to handle this by trying to create it first:
+```rs
+use std::io::ErrorKind;
+
+// Try to open file
+let file = match File::open("hello.txt") {
+  Ok(existing_file) => existing_file,
+  Err(read_error) => match read_error.kind() {
+    // Couldn't open because it didn't exist. Let's try to create it then.
+    ErrorKind::NotFound => match File::create("hello.txt") {
+      Ok(created_file) => created_file,
+      Err(create_error) => panic!("Could not create necessary file: {}", create_error.to_string()),
+    },
+    // Couldn't open for some other reason. Could've been a disk error, permission issue, or anything else really.
+    _ => {
+      panic!("Could not open file: {}", read_error.to_string())
+    }
+  },
+};
+```
+
+### Alternate Result Handling
+All that `match`ing can get really complicated really fast. Especially if all you want to do if the `Result` is an `Err` is simply panic. Thankfully, `Result`'s got us covered with a couple of nice methods. Let's try to open that file without `match`ing:
+```rs
+let file = File::open("hello.txt").unwrap();
+```
+That's much easier to read. What `unwrap()` does is simply return the value if the `Result` is `Ok`. Otherwise, it panics.
+
+However, unwrap doesn't let us define an error message to show to the user. We can instead use `expect(&str)`:
+```rs
+let file = File::open("hello.txt").expect("Cannot open file");
+```
+
+### Quickly Propagating Errors
+Say you've got a method that reads `hello.txt` and returns the text found inside as a `String`. You might have something like this:
+```rs
+fn read_file() -> Result<String, io::Error> {
+  let mut file = match File::open("hello.txt") {
+    Ok(file) => file,
+    Err(error) => return Err(error),
+  };
+  let mut text = String::new();
+  match file.read_to_string(&mut text) {
+    Ok(_) => return Ok(text),
+    Err(error) => return Err(error),
+  }
+}
+```
+This is really messy, and all it's doing is passing any `Err`s to the caller. A much easier syntax is the `?` operator:
+```rs
+fn read_file() -> Result<String, io::Error> {
+  let mut file = File::open("hello.txt")?;
+  let mut text = String::new();
+  file.read_to_string(&mut text)?;
+  return Ok(text);
+}
+```
+`?` simply says "If `Ok`, keep going. If `Err`, give it to the caller to handle."
+
+Side note, since reading text files is such a common operation, you can simply do this instead:
+```rs
+use std::fs;
+let text = fs::read_to_string("hello.txt").expect("Could not open file.");
+```
+
+### Result on `main()`
+Main can return a `Result`:
+```rs
+use std::error:Error;
+
+fn main() -> Result<(), Box<dyn Error>> {
+
+}
+```
+Think of `Box<dyn Error>` as just being "Any type of error."
+
+Also, `()` simply means a function that doesn't return anything. This means you can define functions that return a `Result<(), Error>` in case you don't have a return value but want to handle any possible errors.
 
 # Miscellaneous
 
