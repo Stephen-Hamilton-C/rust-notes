@@ -84,6 +84,13 @@ Sandbox to learn about Rust
     - [Alternate Result Handling](#alternate-result-handling)
     - [Quickly Propagating Errors](#quickly-propagating-errors)
     - [Result on `main()`](#result-on-main)
+  - [When to use `panic!` or `Result`](#when-to-use-panic-or-result)
+- [Generics](#generics)
+  - [Traits](#traits)
+    - [Trait Implementation](#trait-implementation)
+    - [Defining Default Behavior](#defining-default-behavior)
+    - [Passing Traits as a parameter](#passing-traits-as-a-parameter)
+  - [Trait Bounds](#trait-bounds)
 - [Miscellaneous](#miscellaneous)
   - [Input](#input)
   - [Helpful Math Functions](#helpful-math-functions)
@@ -1182,6 +1189,170 @@ fn main() -> Result<(), Box<dyn Error>> {
 Think of `Box<dyn Error>` as just being "Any type of error."
 
 Also, `()` simply means a function that doesn't return anything. This means you can define functions that return a `Result<(), Error>` in case you don't have a return value but want to handle any possible errors.
+
+## When to use `panic!` or `Result`
+Generally, you want to return `Result`, so that the calling code can decide if the error is unrecoverable or not. It's more appropriate to call `panic!` in tests or prototypes.
+
+# Generics
+Generics are simply Rust's version of C++ templates or Java's reified type.
+```rs
+// On a struct
+#[derive(Debug)]
+struct Point<T> {
+  x: T,
+  y: T,
+}
+
+// On a type impl
+impl<T> Point<T> {
+  fn x(&self) -> &T {
+    &self.x
+  }
+
+  fn y(&self) -> &T {
+    &self.y
+  }
+}
+
+// On an enum
+#[derive(Debug)]
+enum Value<T> {
+  Some(T),
+  Default(T),
+}
+
+// On a function
+fn first<T>(list: &[T]) -> &T {
+  &list[0]
+}
+
+// Usage
+fn main() {
+  let point: Point<usize> = Point { x: 5, y: 4 };
+  println!("x: {}, y: {}", point.x(), point.y());
+  // x: 5, y: 4
+
+  let value = Value::Some(true);
+  println!("{:?}", value);
+  // Some(true)
+
+  let points = vec![point, Point { x: 10, y: 15 }];
+  println!("{:?}", first(&points));
+  // Point { x: 5, y: 4 }
+}
+```
+
+## Traits
+Traits are similar to the more commonly known Interface seen in basically every mainstream OOP. They allow us to define behavior that all objects of a Trait can do, yet the implementation is almost always different. Defining a Trait is quite like defining an Interface:
+```rs
+trait Command {
+  fn execute(&self);
+}
+```
+
+### Trait Implementation
+You could define [Associated Functions](#associated-functions) and [Methods](#methods) for these Traits. Remember that Associated Functions are basically static methods, giving Rust just that little extra convenience and power.
+
+Here's how to define methods for that trait:
+```rs
+struct VersionCommand {
+  version: String,
+}
+
+impl Command for VersionCommand {
+  fn execute(&self) {
+    println!("Program version: {}", self.version);
+  }
+}
+
+// Usage
+fn main() {
+  let version_cmd = VersionCommand { version: String::from("0.1.0") };
+  version_cmd.execute();
+  // Program version: 0.1.0
+}
+```
+That impl block would only be for defining methods for that trait. If you want to define methods specific to `VersionCommand`, you would need a separate `impl VersionCommand` block. The `impl Command` block is what gives `VersionCommand` the `Command` trait.
+
+### Defining Default Behavior
+You can also define default behavior for a trait, similar to an abstract class or Java's whack `default` keyword:
+```rs
+trait Command {
+  fn execute(&self) {
+    println!("Command has not been implemented yet.");
+  }
+}
+
+struct HelpCommand {
+  help_text: String
+}
+
+impl Command for HelpCommand {}
+
+fn main() {
+  let help_cmd = HelpCommand { help_text: String::from("???") };
+  help_cmd.execute();
+  // Command has not been implemented yet.
+}
+```
+The `impl Command for HelpCommand {}` line simply tells Rust to use the default implementation for `Command`.
+
+### Passing Traits as a parameter
+If you want to pass a Trait into a method or store it in a variable, there's two ways of doing this:
+```rs
+// Explicitly
+fn execute_command(cmd: &impl Command) {
+  cmd.execute();
+}
+
+// Trait Bound Syntax
+fn execute_command<T: Command>(cmd: &T) {
+  cmd.execute();
+}
+```
+The difference is that if we wanted multiple parameters that inherit `Command` but are different Types, we would use `&impl Command` as that is any Type that inherits the `Command` Trait, while the Trait Bound Syntax only allows a single Type that inherits the `Command` Trait. For example, this wouldn't work:
+```rs
+fn execute_two_commands<T: Command>(cmd1: &T, cmd2: &T) {
+  cmd1.execute();
+  cmd2.execute();
+}
+
+fn main() {
+  execute_two_commands(&help_cmd, &version_cmd);
+  //                              ^^^^^^^^^^^^
+  // E0308: mismatched types. Expected &HelpCommand, got &VersionCommand
+}
+```
+
+However, this would work:
+```rs
+fn execute_two_commands(cmd1: &impl Command, cmd2: &impl Command) {
+  cmd1.execute();
+  cmd2.execute();
+}
+
+fn main() {
+  execute_two_commands(&help_cmd, &version_cmd);
+  // Command has not been implemented yet.
+  // Program version: 0.1.0
+}
+```
+
+## Trait Bounds
+As just seen in [Passing Traits as a Parameter](#passing-traits-as-a-parameter), you can restrict a Generic Type to certain Traits like so:
+```rs
+fn execute_command<T: Command>(cmd: &T) {
+  cmd.execute();
+}
+```
+
+You can also restrict the Type to inherit multiple Traits:
+```rs
+fn execute_command<T: Command + Display>(cmd: &T) {
+  cmd.execute();
+}
+```
+This function will only run if the Type of the parameter passed in inherits the `Command` *and* `Display` Traits.
 
 # Miscellaneous
 
